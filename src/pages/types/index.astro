@@ -1,0 +1,310 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getIndex, getMoves, getTypes } from "../../lib/data";
+import { ROMAN, multiplierLabel } from "../../lib/format";
+
+const types = getTypes();
+const index = getIndex();
+const moves = getMoves();
+const summary = types.map((t) => ({
+  ...t,
+  pokemon: index.filter((e) => e.types.includes(t.slug)).length,
+  moves: moves.filter((m) => m.type === t.slug).length,
+  strong: types.filter((d) => t.attack[d.slug] === 2),
+  weak: types.filter((a) => t.defense[a.slug] === 2),
+}));
+---
+
+<Base title="Types and the type chart" description="All 18 Pokémon types, what each one beats and what beats it, with the full type chart.">
+  <header class="page-head">
+    <div class="wrap">
+      <span class="label">Types</span>
+      <h1>Eighteen types</h1>
+      <p class="lede">
+        Every Pokémon and every move has a type. Attacks deal double damage, half damage or nothing at all depending on the
+        type they hit. Hover the chart to follow a row and a column.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="types-grid">
+        {
+          summary.map((t) => (
+            <a class="tcard" href={`/types/${t.slug}/`} data-type={t.slug}>
+              <span class="tc-head">
+                <span class="tc-name">{t.name}</span>
+                <span class="label">Gen {ROMAN[t.generation]}</span>
+              </span>
+              <span class="tc-counts muted">
+                {t.pokemon} Pokémon · {t.moves} moves
+              </span>
+              <span class="tc-rel">
+                <span class="label">Strong against</span>
+                <span class="mini">{t.strong.length ? t.strong.map((s) => <i data-type={s.slug} title={s.name} />) : "—"}</span>
+              </span>
+              <span class="tc-rel">
+                <span class="label">Weak to</span>
+                <span class="mini">{t.weak.map((s) => <i data-type={s.slug} title={s.name} />)}</span>
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="chart">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Type chart</h2>
+        <p>Rows attack, columns defend.</p>
+      </div>
+      <div class="chart-wrap panel">
+        <table class="chart" data-chart>
+          <thead>
+            <tr>
+              <th class="corner"><span class="label">Atk ↓ Def →</span></th>
+              {
+                types.map((t, i) => (
+                  <th scope="col" data-col={i}>
+                    <a href={`/types/${t.slug}/`} class="head" data-type={t.slug} title={t.name}>
+                      {t.name.slice(0, 3)}
+                    </a>
+                  </th>
+                ))
+              }
+            </tr>
+          </thead>
+          <tbody>
+            {
+              types.map((atk) => (
+                <tr>
+                  <th scope="row">
+                    <a href={`/types/${atk.slug}/`} class="row-head" data-type={atk.slug}>
+                      {atk.name}
+                    </a>
+                  </th>
+                  {types.map((def, i) => {
+                    const m = atk.attack[def.slug];
+                    return (
+                      <td data-col={i} data-m={String(m).replace(".", "_")} title={`${atk.name} → ${def.name}: ×${m}`}>
+                        {m === 1 ? "" : multiplierLabel(m)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="legend muted">
+        <span class="lg x2">2</span> super effective <span class="lg x05">½</span> not very effective <span class="lg x0">0</span> no effect
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const chart = document.querySelector<HTMLTableElement>("[data-chart]");
+  chart?.addEventListener("mouseover", (e) => {
+    const cell = (e.target as HTMLElement).closest<HTMLElement>("[data-col]");
+    chart.querySelectorAll(".hl").forEach((el) => el.classList.remove("hl"));
+    if (!cell) return;
+    chart.querySelectorAll(`[data-col="${cell.dataset.col}"]`).forEach((el) => el.classList.add("hl"));
+    cell.closest("tr")?.classList.add("hl");
+  });
+  chart?.addEventListener("mouseleave", () => chart.querySelectorAll(".hl").forEach((el) => el.classList.remove("hl")));
+</script>
+
+<style>
+  .types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+
+  .tcard {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 18px 18px 20px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--c);
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .tcard:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .tc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .tc-name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 560;
+  }
+
+  .tc-counts {
+    font-size: 0.88rem;
+    margin-top: -6px;
+  }
+
+  .tc-rel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mini {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .mini i {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  .chart-wrap {
+    overflow-x: auto;
+    padding: 12px;
+  }
+
+  .chart {
+    border-collapse: separate;
+    border-spacing: 3px;
+    margin-inline: auto;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .chart th,
+  .chart td {
+    padding: 0;
+  }
+
+  .corner {
+    text-align: left;
+    vertical-align: bottom;
+    padding-bottom: 6px !important;
+  }
+
+  .head {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--c);
+    color: #fff;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 1px rgb(0 0 0 / 0.3);
+  }
+
+  .row-head {
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: color-mix(in oklab, var(--c) 18%, var(--card));
+    border-left: 4px solid var(--c);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .chart td {
+    width: 40px;
+    height: 34px;
+    text-align: center;
+    border-radius: 8px;
+    background: var(--paper-2);
+    font-weight: 500;
+    transition: outline-color 0.1s;
+    outline: 2px solid transparent;
+  }
+
+  .chart td[data-m="2"] {
+    background: #3f9b5a;
+    color: #fff;
+  }
+
+  .chart td[data-m="0_5"] {
+    background: #c8553d;
+    color: #fff;
+  }
+
+  .chart td[data-m="0"] {
+    background: #5b5f6b;
+    color: #fff;
+  }
+
+  .chart tr.hl td,
+  .chart .hl {
+    outline-color: color-mix(in oklab, var(--ink) 35%, transparent);
+  }
+
+  .chart tr.hl td.hl {
+    outline-color: var(--ink);
+  }
+
+  .legend {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+  }
+
+  .lg {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 22px;
+    border-radius: 6px;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    margin-left: 10px;
+  }
+
+  .lg:first-child {
+    margin-left: 0;
+  }
+
+  .x2 {
+    background: #3f9b5a;
+  }
+
+  .x05 {
+    background: #c8553d;
+  }
+
+  .x0 {
+    background: #5b5f6b;
+  }
+</style>

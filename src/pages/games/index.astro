@@ -1,0 +1,176 @@
+---
+import Base from "../../layouts/Base.astro";
+import GameCard from "../../components/GameCard.astro";
+import { entryById, getGames, getGenerations } from "../../lib/data";
+import { ROMAN } from "../../lib/format";
+
+const games = getGames();
+const generations = getGenerations().map((g) => {
+  const list = games.filter((x) => x.generation === g.number).sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999) || a.order - b.order);
+  const years = list.map((x) => x.year).filter((y): y is number => y !== null);
+  return {
+    ...g,
+    list,
+    from: years.length ? Math.min(...years) : null,
+    to: years.length ? Math.max(...years) : null,
+    mascots: [g.species[0], g.species[3], g.species[6]].map((id) => entryById(id)).filter((e) => e !== undefined),
+  };
+});
+---
+
+<Base title="Games and generations" description="Every main Pokémon game by generation, with its region, platform and year.">
+  <header class="page-head">
+    <div class="wrap">
+      <span class="label">Games</span>
+      <h1>Thirty years, nine generations</h1>
+      <p class="lede">
+        Each generation introduces a region, new Pokémon and new mechanics. Here are the games that make up each one, from the
+        original Game Boy cartridges to today.
+      </p>
+      <p class="legend">
+        <span class="k original">Main game</span>
+        <span class="k remake">Remake</span>
+        <span class="k expansion">Expansion</span>
+        <span class="k spin">Spin-off</span>
+      </p>
+    </div>
+  </header>
+
+  <div class="wrap timeline">
+    {
+      generations.map((g) => (
+        <section class="gen" id={g.slug}>
+          <div class="gen-side">
+            <span class="roman mono">{ROMAN[g.number]}</span>
+            <div class="gen-info">
+              <h2>
+                <a href={`/games/${g.slug}/`}>{g.region}</a>
+              </h2>
+              <p class="label">
+                {g.from}
+                {g.to && g.to !== g.from ? `–${g.to}` : ""} · {g.species.length} new species
+              </p>
+              <div class="mascots" aria-hidden="true">
+                {g.mascots.map((m) => (
+                  <img src={m!.artwork} alt="" width="64" height="64" loading="lazy" />
+                ))}
+              </div>
+              <a class="btn sm" href={`/games/${g.slug}/`}>
+                Generation {ROMAN[g.number]} →
+              </a>
+            </div>
+          </div>
+          <div class="gen-games">
+            {g.list.map((game) => (
+              <GameCard game={game} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+    font-size: 0.88rem;
+    color: var(--ink-2);
+  }
+
+  .k::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 8px;
+    vertical-align: -1px;
+    background: var(--accent);
+  }
+
+  .k.remake::before {
+    background: #5a7fe0;
+  }
+
+  .k.expansion::before {
+    background: #3fae7c;
+  }
+
+  .k.spin::before {
+    background: var(--line-2);
+  }
+
+  .timeline {
+    padding-top: 16px;
+  }
+
+  .gen {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 32px;
+    padding-block: 36px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .gen-side {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    position: sticky;
+    top: 88px;
+    align-self: start;
+  }
+
+  .roman {
+    font-size: 2.2rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--accent);
+    min-width: 64px;
+  }
+
+  .gen-info h2 a {
+    text-decoration: none;
+  }
+
+  .gen-info .label {
+    margin: 8px 0 10px;
+  }
+
+  .mascots {
+    display: flex;
+    margin-bottom: 14px;
+  }
+
+  .mascots img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+  }
+
+  .mascots img + img {
+    margin-left: -10px;
+  }
+
+  .gen-games {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+    align-content: start;
+  }
+
+  @media (max-width: 820px) {
+    .gen {
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .gen-side {
+      position: static;
+    }
+  }
+</style>

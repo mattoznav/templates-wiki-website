@@ -1,0 +1,156 @@
+---
+import Base from "../../layouts/Base.astro";
+import PokemonList from "../../components/PokemonList.astro";
+import TypeBadge from "../../components/TypeBadge.astro";
+import { entriesBySlugs, getMoves } from "../../lib/data";
+import { ROMAN, categoryLabel } from "../../lib/format";
+import type { Move } from "../../lib/types";
+
+export function getStaticPaths() {
+  return getMoves().map((move) => ({ params: { slug: move.slug }, props: { move } }));
+}
+
+const { move } = Astro.props as { move: Move };
+const learners = entriesBySlugs(move.learnedBy);
+const facts = [
+  { label: "Power", value: move.power ?? "—" },
+  { label: "Accuracy", value: move.accuracy ? `${move.accuracy}%` : "Never misses" },
+  { label: "PP", value: move.pp ?? "—" },
+  { label: "Priority", value: move.priority > 0 ? `+${move.priority}` : move.priority },
+];
+---
+
+<Base title={`${move.name} (move)`} description={`${move.name}: ${move.type} ${move.category} move. ${move.effect ?? ""}`}>
+  <header class="page-head move-head" data-type={move.type}>
+    <div class="wrap">
+      <a class="label back" href="/moves/">← All moves</a>
+      <h1>{move.name}</h1>
+      <div class="tags">
+        <TypeBadge type={move.type} size="lg" />
+        <span class={`cat ${move.category}`}>{categoryLabel[move.category]}</span>
+        <span class="label">Generation {ROMAN[move.generation]}</span>
+      </div>
+      {move.effect && <p class="lede">{move.effect}</p>}
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap move-grid">
+      <dl class="facts">
+        {
+          facts.map((f) => (
+            <div class="panel">
+              <dt class="label">{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))
+        }
+        <div class="panel wide">
+          <dt class="label">Target</dt>
+          <dd class="small">{move.target}</dd>
+        </div>
+      </dl>
+      {
+        move.flavor && (
+          <blockquote class="flavor panel">
+            <p class="label">In-game description</p>
+            <p>{move.flavor}</p>
+          </blockquote>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Learned by</h2>
+        <p>{learners.length ? `${learners.length} species` : "No Pokémon learn this move in any recorded game."}</p>
+      </div>
+      {
+        learners.length > 0 && (
+          <PokemonList entries={learners} />
+        )
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .move-head {
+    background: linear-gradient(180deg, color-mix(in oklab, var(--c) 14%, var(--paper)), var(--paper));
+  }
+
+  .back {
+    text-decoration: none;
+  }
+
+  .move-head h1 {
+    margin-top: 10px;
+  }
+
+  .tags {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 18px 0 20px;
+  }
+
+  .move-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .facts {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .facts .panel {
+    padding: 16px;
+  }
+
+  .facts dd {
+    margin: 6px 0 0;
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    font-weight: 520;
+    line-height: 1.1;
+  }
+
+  .facts dd.small {
+    font-family: var(--font-body);
+    font-size: 1rem;
+  }
+
+  .wide {
+    grid-column: 1 / -1;
+  }
+
+  .flavor {
+    margin: 0;
+    padding: 20px;
+  }
+
+  .flavor p + p {
+    margin-top: 8px;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-style: italic;
+  }
+
+  @media (max-width: 820px) {
+    .move-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .facts {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

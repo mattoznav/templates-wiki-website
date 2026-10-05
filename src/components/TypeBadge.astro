@@ -1,0 +1,17 @@
+---
+import { typeName } from "../lib/format";
+
+interface Props {
+  type: string;
+  size?: "md" | "lg";
+  link?: boolean;
+}
+const { type, size = "md", link = true } = Astro.props;
+const Tag = link ? "a" : "span";
+---
+
+<Tag
+  class:list={["type", { lg: size === "lg" }]}
+  data-type={type}
+  href={link ? `/types/${type}/` : undefined}>{typeName(type)}</Tag
+>

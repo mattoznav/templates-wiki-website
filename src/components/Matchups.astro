@@ -1,0 +1,129 @@
+---
+import { getTypes } from "../lib/data";
+import { defenses, multiplierLabel, typeName } from "../lib/format";
+import type { TypeSlug } from "../lib/types";
+
+interface Props {
+  types: TypeSlug[];
+}
+const { types } = Astro.props;
+const rows = defenses(types, getTypes());
+const weak = rows.filter((r) => r.multiplier > 1);
+const resist = rows.filter((r) => r.multiplier > 0 && r.multiplier < 1);
+const immune = rows.filter((r) => r.multiplier === 0);
+---
+
+<div class="matchups">
+  <div class="cells">
+    {
+      rows.map((r) => (
+        <a
+          class="cell"
+          href={`/types/${r.type}/`}
+          data-type={r.type}
+          data-m={String(r.multiplier).replace(".", "_")}
+          title={`${typeName(r.type)} moves deal ${r.multiplier}× damage`}
+        >
+          <span class="t">{r.type.slice(0, 3)}</span>
+          <span class="m mono">{r.multiplier === 1 ? "" : multiplierLabel(r.multiplier)}</span>
+        </a>
+      ))
+    }
+  </div>
+  <dl class="summary">
+    <div>
+      <dt class="label">Weak to</dt>
+      <dd>{weak.length ? weak.map((r) => `${typeName(r.type)} ×${multiplierLabel(r.multiplier)}`).join(", ") : "Nothing"}</dd>
+    </div>
+    <div>
+      <dt class="label">Resists</dt>
+      <dd>{resist.length ? resist.map((r) => `${typeName(r.type)} ×${multiplierLabel(r.multiplier)}`).join(", ") : "Nothing"}</dd>
+    </div>
+    {
+      immune.length > 0 && (
+        <div>
+          <dt class="label">Immune to</dt>
+          <dd>{immune.map((r) => typeName(r.type)).join(", ")}</dd>
+        </div>
+      )
+    }
+  </dl>
+</div>
+
+<style>
+  .cells {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+  }
+
+  .cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 2px 6px;
+    border-radius: 10px;
+    text-decoration: none;
+    background: color-mix(in oklab, var(--c) 12%, var(--card));
+    border: 1px solid color-mix(in oklab, var(--c) 30%, transparent);
+  }
+
+  .t {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: color-mix(in oklab, var(--c) 60%, var(--ink));
+  }
+
+  .m {
+    height: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .cell[data-m="2"] .m,
+  .cell[data-m="4"] .m {
+    color: #c7362b;
+  }
+
+  .cell[data-m="4"] {
+    background: color-mix(in oklab, #d9483c 22%, var(--card));
+    border-color: #d9483c;
+  }
+
+  .cell[data-m="0_5"] .m,
+  .cell[data-m="0_25"] .m,
+  .cell[data-m="0"] .m {
+    color: #2f8a5f;
+  }
+
+  .cell[data-m="0"] {
+    background: var(--paper-2);
+    border-style: dashed;
+  }
+
+  .summary {
+    margin: 18px 0 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .summary div {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 12px;
+  }
+
+  .summary dd {
+    margin: 0;
+    font-size: 0.92rem;
+  }
+
+  @media (max-width: 560px) {
+    .cells {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+</style>

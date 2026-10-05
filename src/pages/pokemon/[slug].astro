@@ -1,0 +1,629 @@
+---
+import Base from "../../layouts/Base.astro";
+import TypeBadge from "../../components/TypeBadge.astro";
+import StatBars from "../../components/StatBars.astro";
+import Matchups from "../../components/Matchups.astro";
+import Evolution from "../../components/Evolution.astro";
+import Learnset from "../../components/Learnset.astro";
+import { getChains, getSpecies, entryById } from "../../lib/data";
+import { ROMAN, dexNo, formatHeight, formatWeight, gender, pad, pct } from "../../lib/format";
+import type { Species } from "../../lib/types";
+
+export function getStaticPaths() {
+  return getSpecies().map((species) => ({ params: { slug: species.slug }, props: { species } }));
+}
+
+const { species } = Astro.props as { species: Species };
+const chain = species.evolutionChain ? getChains()[species.evolutionChain] : null;
+const hasEvolution = chain && chain.into.length > 0;
+const prev = entryById(species.id - 1);
+const next = entryById(species.id + 1);
+const main = species.varieties.find((v) => v.isDefault) ?? species.varieties[0];
+const ratio = gender(species.genderRate);
+const status = species.isLegendary ? "Legendary" : species.isMythical ? "Mythical" : species.isBaby ? "Baby" : null;
+const formLabel = (v: (typeof species.varieties)[number]) =>
+  v.isDefault ? (species.varieties.length > 1 ? "Standard" : species.name) : (v.formName ?? v.fullName ?? v.slug);
+// Forms without a learnset of their own (Mega Evolutions, most cosmetic forms) share the standard one,
+// so it is rendered once instead of once per form
+const mainLearnset = JSON.stringify(main.learnset);
+const sharesLearnset = (v: (typeof species.varieties)[number]) =>
+  !v.isDefault && (!v.learnset.length || JSON.stringify(v.learnset) === mainLearnset);
+const catchChance = Math.round((species.captureRate / 255) * 1000) / 10;
+---
+
+<Base
+  title={`${species.name} (${dexNo(species.id)})`}
+  description={`${species.name}, the ${species.genus ?? "Pokémon"}: ${species.types.join("/")} type. ${species.flavor ?? ""}`}
+  image={main.artwork}
+>
+  <div class="wrap crumbs">
+    <a href="/pokemon/" class="label">← All Pokémon</a>
+    <div class="pager">
+      {
+        prev && (
+          <a href={`/pokemon/${prev.slug}/`} rel="prev">
+            <span class="mono">#{pad(prev.id)}</span> {prev.name}
+          </a>
+        )
+      }
+      {
+        next && (
+          <a href={`/pokemon/${next.slug}/`} rel="next">
+            {next.name} <span class="mono">#{pad(next.id)}</span>
+          </a>
+        )
+      }
+    </div>
+  </div>
+
+  <section class="hero" data-type={species.types[0]}>
+    <div class="wrap hero-grid">
+      <div class="art dots">
+        <span class="watermark mono" aria-hidden="true">{pad(species.id)}</span>
+        {
+          species.varieties.map((v) => (
+            <img
+              data-form={v.slug}
+              hidden={!v.isDefault}
+              src={v.artwork ?? undefined}
+              data-normal={v.artwork}
+              data-shiny={v.artworkShiny}
+              alt={`Official artwork of ${v.fullName ?? species.name}`}
+              width="475"
+              height="475"
+              loading={v.isDefault ? "eager" : "lazy"}
+              fetchpriority={v.isDefault ? "high" : undefined}
+            />
+          ))
+        }
+        <div class="art-tools">
+          <button class="btn sm" type="button" data-shiny-toggle aria-pressed="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"
+              ><path d="M12 2l2.4 6.9L21 11l-6.6 2.1L12 20l-2.4-6.9L3 11l6.6-2.1z"></path></svg
+            >
+            Shiny
+          </button>
+          {
+            main.cry && (
+              <button class="btn sm" type="button" data-cry={main.cry} hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <path d="M4 9v6h4l5 4V5L8 9H4Z" stroke-linejoin="round" />
+                  <path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12" stroke-linecap="round" />
+                </svg>
+                Cry
+              </button>
+            )
+          }
+        </div>
+      </div>
+
+      <div class="intro rise">
+        <p class="label">
+          {dexNo(species.id)} · <a href={`/games/generation-${ROMAN[species.generation].toLowerCase()}/`}>Generation {ROMAN[species.generation]}</a>
+          {status && <span class="status">{status}</span>}
+        </p>
+        <h1>{species.name}</h1>
+        <p class="genus">{species.genus}</p>
+        {
+          species.varieties.map((v) => (
+            <div class="types" data-form={v.slug} hidden={!v.isDefault}>
+              {v.types.map((t) => (
+                <TypeBadge type={t} size="lg" />
+              ))}
+            </div>
+          ))
+        }
+        {
+          species.flavor && (
+            <blockquote class="flavor">
+              <p>{species.flavor}</p>
+              {species.flavorGame && <footer class="label">Pokédex entry · {species.flavorGame}</footer>}
+            </blockquote>
+          )
+        }
+        {
+          species.varieties.length > 1 && (
+            <div class="forms" role="group" aria-label="Forms">
+              <p class="label">{species.varieties.length} forms</p>
+              <div class="form-chips">
+                {species.varieties.map((v) => (
+                  <button class="chip" type="button" data-form-tab={v.slug} aria-pressed={v.isDefault ? "true" : "false"}>
+                    {formLabel(v)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  {
+    species.varieties.map((v) => (
+      <div data-form={v.slug} hidden={!v.isDefault}>
+        <section class="section">
+          <div class="wrap profile">
+            <div class="facts panel">
+              <h2 class="h">Profile</h2>
+              <dl>
+                <div>
+                  <dt class="label">Height</dt>
+                  <dd>{formatHeight(v.height)}</dd>
+                </div>
+                <div>
+                  <dt class="label">Weight</dt>
+                  <dd>{formatWeight(v.weight)}</dd>
+                </div>
+                <div class="wide">
+                  <dt class="label">Abilities</dt>
+                  <dd class="abilities">
+                    {v.abilities.map((a) => (
+                      <a href={`/abilities/${a.slug}/`}>
+                        {a.name}
+                        {a.hidden && <span class="hidden-tag">hidden</span>}
+                      </a>
+                    ))}
+                  </dd>
+                </div>
+                <div class="wide">
+                  <dt class="label">Gender</dt>
+                  <dd>
+                    {ratio ? (
+                      <span class="gender">
+                        <span class="gbar" style={`--f:${ratio.female}%`} aria-hidden="true" />
+                        <span>
+                          {pct(ratio.male)} male · {pct(ratio.female)} female
+                        </span>
+                      </span>
+                    ) : (
+                      "Genderless"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="label">Catch rate</dt>
+                  <dd>
+                    {species.captureRate} <span class="muted">({catchChance}% with a Poké Ball at full HP)</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt class="label">Base friendship</dt>
+                  <dd>{species.baseHappiness ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt class="label">Egg groups</dt>
+                  <dd>{species.eggGroups.join(", ") || "—"}</dd>
+                </div>
+                <div>
+                  <dt class="label">Hatch time</dt>
+                  <dd>{species.hatchCounter != null ? `${species.hatchCounter} cycles` : "—"}</dd>
+                </div>
+                <div>
+                  <dt class="label">Growth rate</dt>
+                  <dd>{species.growthRate}</dd>
+                </div>
+                <div>
+                  <dt class="label">Base experience</dt>
+                  <dd>{v.baseExperience ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt class="label">Habitat</dt>
+                  <dd>{species.habitat ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt class="label">Colour · shape</dt>
+                  <dd>
+                    {species.color} · {species.shape ?? "—"}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            <div class="stack">
+              <div class="panel pad">
+                <h2 class="h">Base stats</h2>
+                <StatBars stats={v.stats} total={v.total} />
+              </div>
+              <div class="panel pad">
+                <h2 class="h">Type defenses</h2>
+                <p class="muted small">Damage taken from each attacking type.</p>
+                <Matchups types={v.types} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {v.isDefault && hasEvolution && (
+          <section class="section">
+            <div class="wrap">
+              <div class="section-head">
+                <h2>Evolution</h2>
+              </div>
+              <div class="evo panel dots">
+                <Evolution node={chain!} current={species.slug} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section class="section">
+          <div class="wrap">
+            <div class="section-head">
+              <h2>Moves</h2>
+            </div>
+            {sharesLearnset(v) ? (
+              <p class="muted">
+                Same moves as the standard form.{" "}
+                <button class="link" type="button" data-form-tab-link={main.slug}>
+                  Show the standard form
+                </button>
+              </p>
+            ) : (
+              <Learnset learnset={v.learnset} game={v.learnsetGame} id={`moves-${v.slug}`} />
+            )}
+          </div>
+        </section>
+      </div>
+    ))
+  }
+
+  {
+    !hasEvolution && (
+      <section class="section">
+        <div class="wrap">
+          <p class="muted">{species.name} does not evolve.</p>
+        </div>
+      </section>
+    )
+  }
+
+  <nav class="wrap neighbours" aria-label="Neighbouring entries">
+    {
+      prev ? (
+        <a href={`/pokemon/${prev.slug}/`} class="nb" data-type={prev.types[0]}>
+          <img src={prev.artwork} alt="" width="72" height="72" loading="lazy" />
+          <span>
+            <span class="label">Previous · #{pad(prev.id)}</span>
+            <span class="nb-name">{prev.name}</span>
+          </span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    {
+      next && (
+        <a href={`/pokemon/${next.slug}/`} class="nb right" data-type={next.types[0]}>
+          <span>
+            <span class="label">Next · #{pad(next.id)}</span>
+            <span class="nb-name">{next.name}</span>
+          </span>
+          <img src={next.artwork} alt="" width="72" height="72" loading="lazy" />
+        </a>
+      )
+    }
+  </nav>
+</Base>
+
+<script>
+  import "../../scripts/pokemon";
+</script>
+
+<style>
+  .crumbs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block: 18px;
+  }
+
+  .crumbs a {
+    text-decoration: none;
+  }
+
+  .pager {
+    display: flex;
+    gap: 18px;
+    font-size: 0.9rem;
+  }
+
+  .pager a {
+    color: var(--ink-2);
+  }
+
+  .pager a:hover {
+    color: var(--ink);
+  }
+
+  .pager .mono {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .hero {
+    border-block: 1px solid var(--line);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--c) 9%, var(--paper)) 0%,
+      var(--paper) 100%
+    );
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: clamp(24px, 5vw, 64px);
+    align-items: center;
+    padding-block: clamp(24px, 4vw, 48px);
+  }
+
+  .art {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 28px;
+    background-color: color-mix(in oklab, var(--c) 16%, var(--card));
+    border: 1px solid color-mix(in oklab, var(--c) 30%, var(--line));
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .art img {
+    grid-area: 1 / 1;
+    width: 82%;
+    height: 82%;
+    object-fit: contain;
+    filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.18));
+    position: relative;
+  }
+
+  .art img[hidden] {
+    display: none;
+  }
+
+  .watermark {
+    position: absolute;
+    right: -0.04em;
+    bottom: -0.2em;
+    font-size: clamp(5rem, 14vw, 10rem);
+    font-weight: 500;
+    line-height: 1;
+    color: color-mix(in oklab, var(--c) 22%, transparent);
+    letter-spacing: -0.04em;
+  }
+
+  .art-tools {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .art-tools .btn[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .intro h1 {
+    margin-top: 10px;
+  }
+
+  .intro .label a {
+    color: inherit;
+  }
+
+  .status {
+    margin-left: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .genus {
+    margin: 8px 0 18px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.25rem;
+    color: var(--ink-2);
+  }
+
+  .flavor {
+    margin: 26px 0 0;
+    padding: 18px 20px;
+    border-left: 3px solid var(--c);
+    background: color-mix(in oklab, var(--card) 70%, transparent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .flavor p {
+    font-size: 1.05rem;
+    color: var(--ink-2);
+  }
+
+  .flavor footer {
+    margin-top: 10px;
+  }
+
+  .forms {
+    margin-top: 24px;
+  }
+
+  .form-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .profile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .stack {
+    display: grid;
+    gap: 18px;
+  }
+
+  .pad {
+    padding: 22px;
+  }
+
+  .h {
+    font-size: 1.35rem;
+    margin-bottom: 16px;
+  }
+
+  .small {
+    font-size: 0.85rem;
+    margin: -8px 0 14px;
+  }
+
+  .facts {
+    padding: 22px;
+  }
+
+  .facts dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 20px;
+  }
+
+  .facts dd {
+    margin: 4px 0 0;
+  }
+
+  .facts .wide {
+    grid-column: 1 / -1;
+  }
+
+  .abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .abilities a {
+    font-weight: 500;
+  }
+
+  .hidden-tag {
+    margin-left: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+
+  .gender {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .gbar {
+    width: 140px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #4b84d8 calc(100% - var(--f)), #e06aa0 calc(100% - var(--f)));
+  }
+
+  .evo {
+    padding: 24px;
+    overflow-x: auto;
+  }
+
+  .link {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .neighbours {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block: 32px 0;
+  }
+
+  .nb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px 10px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--card);
+    text-decoration: none;
+  }
+
+  .nb.right {
+    padding: 10px 10px 10px 18px;
+    text-align: right;
+  }
+
+  .nb:hover {
+    border-color: var(--ink-2);
+  }
+
+  .nb img {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    background: color-mix(in oklab, var(--c) 14%, var(--card));
+  }
+
+  .nb > span {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nb-name {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 560;
+  }
+
+  @media (max-width: 860px) {
+    .hero-grid,
+    .profile {
+      grid-template-columns: 1fr;
+    }
+
+    .art {
+      max-width: 420px;
+      width: 100%;
+      margin-inline: auto;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .pager {
+      display: none;
+    }
+
+    .facts dl {
+      grid-template-columns: 1fr;
+    }
+
+    .nb img {
+      display: none;
+    }
+  }
+</style>

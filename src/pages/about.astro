@@ -1,0 +1,44 @@
+---
+import Base from "../layouts/Base.astro";
+import { getMeta } from "../lib/data";
+
+const meta = getMeta();
+const built = new Date(meta.builtAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+---
+
+<Base title="About and credits" description="Where the data comes from, how the guide is built and who owns what.">
+  <header class="page-head">
+    <div class="wrap">
+      <span class="label">About</span>
+      <h1>About Fieldbook</h1>
+      <p class="lede">A fan-made reference, built from open data. Data last refreshed on {built}.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap prose">
+      <h2>Where the data comes from</h2>
+      <p>
+        Every number, name and description comes from <a href="https://pokeapi.co/">PokéAPI</a>, a free and open database of
+        Pokémon game data. Artwork, sprites and cries are loaded from PokéAPI's public
+        <a href="https://github.com/PokeAPI/sprites">sprites</a> and <a href="https://github.com/PokeAPI/cries">cries</a>
+        repositories. Release years and platforms on the games page are added by hand.
+      </p>
+
+      <h2>How it is built</h2>
+      <ul>
+        <li>A build script downloads about 4,700 resources from PokéAPI once and caches them on disk, as PokéAPI's fair use policy asks.</li>
+        <li>It reduces them to a few compact files: {meta.counts.species.toLocaleString("en")} species with {meta.counts.forms.toLocaleString("en")} forms, {meta.counts.moves} moves, {meta.counts.abilities} abilities and {meta.counts.games} games.</li>
+        <li>Every page is generated ahead of time, so nothing is fetched from PokéAPI while you browse; only images come from its CDN.</li>
+        <li>Filters, sorting and search run in the browser on data that is already in the page.</li>
+      </ul>
+
+      <h2>Trademarks</h2>
+      <p>
+        Pokémon and Pokémon character names are trademarks of Nintendo, Creatures Inc. and GAME FREAK inc. Official artwork
+        is © its respective owners. Fieldbook is an unofficial fan reference and is not affiliated with, sponsored or endorsed
+        by any of them.
+      </p>
+    </div>
+  </section>
+</Base>

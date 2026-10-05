@@ -1,0 +1,165 @@
+---
+import { entryBySlug } from "../lib/data";
+import { pad } from "../lib/format";
+import type { Chain } from "../lib/types";
+
+interface Props {
+  node: Chain;
+  current: string;
+  root?: boolean;
+}
+const { node, current, root = true } = Astro.props;
+const entry = entryBySlug(node.species);
+---
+
+<div class:list={["stage", { root }]}>
+  {
+    !root && (
+      <div class="how">
+        <span class="arrow" aria-hidden="true">
+          →
+        </span>
+        <span class="cond">{node.conditions.length ? node.conditions.join(" or ") : "Evolves"}</span>
+      </div>
+    )
+  }
+  {
+    entry && (
+      <a
+        class="mon"
+        href={`/pokemon/${entry.slug}/`}
+        data-type={entry.types[0]}
+        aria-current={entry.slug === current ? "page" : undefined}
+      >
+        <img src={entry.artwork} alt="" width="96" height="96" loading="lazy" />
+        <span class="mono no">#{pad(entry.id)}</span>
+        <span class="nm">{entry.name}</span>
+      </a>
+    )
+  }
+  {
+    node.into.length > 0 && (
+      <div class:list={["next", { branch: node.into.length > 1 }]}>
+        {node.into.map((child) => (
+          <Astro.self node={child} current={current} root={false} />
+        ))}
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .stage {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .next {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .next.branch {
+    padding-left: 14px;
+    border-left: 1px dashed var(--line-2);
+  }
+
+  .how {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 128px;
+    text-align: center;
+  }
+
+  .arrow {
+    font-size: 1.2rem;
+    color: var(--muted);
+  }
+
+  .cond {
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--ink-2);
+  }
+
+  .mon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 128px;
+    padding: 10px 8px 12px;
+    border-radius: var(--radius);
+    background: color-mix(in oklab, var(--c) 10%, var(--card));
+    border: 1px solid var(--line);
+    text-decoration: none;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .mon:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--c) 50%, var(--line));
+  }
+
+  .mon[aria-current="page"] {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+
+  .mon img {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+  }
+
+  .no {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .nm {
+    font-family: var(--font-display);
+    font-weight: 560;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  @media (max-width: 720px) {
+    .stage {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .stage.root {
+      align-items: center;
+    }
+
+    .next {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .next.branch {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .next > .stage {
+      align-items: center;
+    }
+
+    .how {
+      width: auto;
+      max-width: 200px;
+    }
+
+    .arrow {
+      transform: rotate(90deg);
+    }
+  }
+</style>

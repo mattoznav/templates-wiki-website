@@ -1,0 +1,162 @@
+---
+import Base from "../../layouts/Base.astro";
+import GameCard from "../../components/GameCard.astro";
+import PokemonCard from "../../components/PokemonCard.astro";
+import TypeBadge from "../../components/TypeBadge.astro";
+import { entryById, getGames, getGenerations } from "../../lib/data";
+import { ROMAN } from "../../lib/format";
+import type { Generation, IndexEntry } from "../../lib/types";
+
+export function getStaticPaths() {
+  const all = getGenerations();
+  return all.map((generation, i) => ({
+    params: { generation: generation.slug },
+    props: { generation, prev: all[i - 1] ?? null, next: all[i + 1] ?? null },
+  }));
+}
+
+const { generation, prev, next } = Astro.props as {
+  generation: Generation;
+  prev: Generation | null;
+  next: Generation | null;
+};
+const games = getGames()
+  .filter((g) => g.generation === generation.number)
+  .sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999) || a.order - b.order);
+const species = generation.species.map((id) => entryById(id)).filter((e): e is IndexEntry => Boolean(e));
+const legendary = species.filter((s) => s.isLegendary || s.isMythical);
+const years = games.map((g) => g.year).filter((y): y is number => y !== null);
+const facts = [
+  { label: "New species", value: species.length },
+  { label: "New moves", value: generation.moves },
+  { label: "New abilities", value: generation.abilities },
+  { label: "Games", value: games.length },
+];
+---
+
+<Base
+  title={`${generation.name}: ${generation.region}`}
+  description={`${generation.name} of Pokémon: the ${generation.region} region, its games and the ${species.length} species it introduced.`}
+>
+  <header class="page-head">
+    <div class="wrap">
+      <a class="label back" href="/games/">← All games</a>
+      <h1><span class="mono roman">{ROMAN[generation.number]}</span> {generation.region}</h1>
+      <p class="lede">
+        {generation.name}, {years.length ? `${Math.min(...years)}${Math.max(...years) !== Math.min(...years) ? `–${Math.max(...years)}` : ""}` : ""}.
+        {species.length} new Pokémon{legendary.length ? `, ${legendary.length} of them legendary or mythical` : ""}.
+      </p>
+      <dl class="facts">
+        {
+          facts.map((f) => (
+            <div>
+              <dt class="label">{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      {
+        generation.types.length > 0 && (
+          <p class="new-types">
+            <span class="label">New types</span>
+            {generation.types.map((t) => (
+              <TypeBadge type={t} />
+            ))}
+          </p>
+        )
+      }
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Games</h2>
+      </div>
+      <div class="games">
+        {games.map((g) => <GameCard game={g} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Pokémon introduced</h2>
+        <a class="label" href={`/pokemon/?gen=${generation.number}`}>Filter in the full list →</a>
+      </div>
+      <div class="grid">
+        {species.map((e, i) => <PokemonCard entry={e} eager={i < 6} />)}
+      </div>
+    </div>
+  </section>
+
+  <nav class="wrap pager" aria-label="Generations">
+    {prev ? <a class="btn" href={`/games/${prev.slug}/`}>← {prev.name} · {prev.region}</a> : <span />}
+    {next && <a class="btn" href={`/games/${next.slug}/`}>{next.name} · {next.region} →</a>}
+  </nav>
+</Base>
+
+<style>
+  .back {
+    text-decoration: none;
+  }
+
+  .page-head h1 {
+    margin-top: 10px;
+  }
+
+  .roman {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 500;
+    vertical-align: 0.3em;
+    margin-right: 0.15em;
+  }
+
+  .lede {
+    margin-top: 18px;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 160px));
+    gap: 24px;
+    margin: 28px 0 0;
+  }
+
+  .facts dd {
+    margin: 4px 0 0;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+  }
+
+  .new-types {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .games {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 560px) {
+    .facts {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

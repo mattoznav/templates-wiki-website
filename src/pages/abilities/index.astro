@@ -1,0 +1,109 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getAbilities } from "../../lib/data";
+import { ROMAN } from "../../lib/format";
+
+const abilities = getAbilities();
+---
+
+<Base title="All abilities" description={`All ${abilities.length} abilities, what they do and which Pokémon have them.`}>
+  <header class="page-head">
+    <div class="wrap">
+      <span class="label">Abilities</span>
+      <h1>All abilities</h1>
+      <p class="lede">
+        {abilities.length} passive effects, from weather setters to immunities. Hidden abilities are the rare third option
+        some Pokémon can have.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="filters">
+        <input class="input grow" type="search" placeholder="Name or effect, e.g. “rain”" aria-label="Search abilities" data-q />
+        <select class="select" aria-label="Generation" data-gen>
+          <option value="">All generations</option>
+          {[3, 4, 5, 6, 7, 8, 9].map((g) => <option value={g}>Generation {ROMAN[g]}</option>)}
+        </select>
+        <p class="label count" aria-live="polite"><span data-count>{abilities.length}</span> shown</p>
+      </div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Ability</th>
+              <th>Effect</th>
+              <th class="num">Pokémon</th>
+              <th class="num">Gen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              abilities.map((a) => (
+                <tr data-search={`${a.name} ${a.effect ?? ""}`.toLowerCase()} data-gen={a.generation}>
+                  <td class="name">
+                    <a href={`/abilities/${a.slug}/`}>{a.name}</a>
+                  </td>
+                  <td class="effect">{a.effect}</td>
+                  <td class="num">{a.pokemon.length}</td>
+                  <td class="num">{ROMAN[a.generation]}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="empty" data-empty hidden>No abilities match.</p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const q = document.querySelector<HTMLInputElement>("[data-q]")!;
+  const gen = document.querySelector<HTMLSelectElement>("[data-gen]")!;
+  const rows = [...document.querySelectorAll<HTMLTableRowElement>("tbody tr")];
+  const count = document.querySelector("[data-count]")!;
+  const empty = document.querySelector<HTMLElement>("[data-empty]")!;
+  function apply() {
+    const text = q.value.trim().toLowerCase();
+    let shown = 0;
+    for (const row of rows) {
+      const match = (!text || row.dataset.search!.includes(text)) && (!gen.value || row.dataset.gen === gen.value);
+      row.hidden = !match;
+      if (match) shown++;
+    }
+    count.textContent = String(shown);
+    empty.hidden = shown > 0;
+  }
+  q.addEventListener("input", apply);
+  gen.addEventListener("change", apply);
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .grow {
+    flex: 1 1 240px;
+  }
+
+  .count {
+    margin-left: auto;
+  }
+
+  .name {
+    white-space: nowrap;
+  }
+
+  .effect {
+    color: var(--ink-2);
+    font-size: 0.9rem;
+    min-width: 260px;
+  }
+</style>

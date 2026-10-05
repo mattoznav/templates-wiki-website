@@ -1,0 +1,166 @@
+---
+import type { IndexEntry } from "../lib/types";
+import { pad } from "../lib/format";
+
+interface Props {
+  entry: IndexEntry;
+  /** Extra line under the name, for example "Hidden ability" */
+  note?: string;
+  eager?: boolean;
+  compact?: boolean;
+}
+const { entry, note, eager = false, compact = false } = Astro.props;
+---
+
+<a
+  class:list={["card", { compact }]}
+  href={`/pokemon/${entry.slug}/`}
+  data-type={entry.types[0]}
+  data-id={entry.id}
+  data-name={entry.name.toLowerCase()}
+  data-types={entry.types.join(" ")}
+  data-gen={entry.generation}
+  data-total={entry.total}
+  data-stats={entry.stats.join(" ")}
+  data-special={entry.isLegendary ? "legendary" : entry.isMythical ? "mythical" : ""}
+>
+  <div class="art dots">
+    <span class="no mono">#{pad(entry.id)}</span>
+    {
+      entry.artwork && (
+        <img
+          src={compact && entry.sprite ? entry.sprite : entry.artwork}
+          alt=""
+          width={compact ? 96 : 200}
+          height={compact ? 96 : 200}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          class:list={{ pixel: compact && entry.sprite }}
+        />
+      )
+    }
+  </div>
+  <div class="body">
+    <span class="name">{entry.name}</span>
+    {note && <span class="note">{note}</span>}
+    {
+      !compact && (
+        <span class="types">
+          {entry.types.map((t) => (
+            <span class="type" data-type={t}>
+              {t}
+            </span>
+          ))}
+        </span>
+      )
+    }
+  </div>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--line);
+    text-decoration: none;
+    overflow: hidden;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.2s,
+      border-color 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: color-mix(in oklab, var(--c) 45%, var(--line));
+  }
+
+  .art {
+    position: relative;
+    aspect-ratio: 1;
+    background-color: color-mix(in oklab, var(--c) 13%, var(--card));
+    display: grid;
+    place-items: center;
+    padding: 14px;
+  }
+
+  .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 8px rgb(0 0 0 / 0.14));
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .art img.pixel {
+    image-rendering: pixelated;
+    filter: none;
+  }
+
+  .card:hover .art img {
+    transform: scale(1.05);
+  }
+
+  .no {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    font-size: 0.72rem;
+    color: color-mix(in oklab, var(--c) 40%, var(--ink-2));
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px 14px;
+    border-top: 1px solid var(--line);
+  }
+
+  .name {
+    font-family: var(--font-display);
+    font-size: 1.12rem;
+    font-weight: 560;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  .body :global(.type) {
+    height: 20px;
+    padding: 0 7px 0 6px;
+    gap: 5px;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+  }
+
+  .body :global(.type)::before {
+    width: 6px;
+    height: 6px;
+  }
+
+  .body :global(.types) {
+    gap: 4px;
+  }
+
+  .note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: -4px;
+  }
+
+  .compact .art {
+    padding: 4px;
+  }
+
+  .compact .body {
+    padding: 8px 10px 10px;
+    gap: 4px;
+  }
+
+  .compact .name {
+    font-size: 0.95rem;
+  }
+</style>

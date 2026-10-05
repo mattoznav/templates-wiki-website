@@ -1,0 +1,26 @@
+---
+// A light list of Pokémon (sprite and name) for long lists such as "learned by",
+// where a full card per entry would make the page heavy.
+import type { IndexEntry } from "../lib/types";
+
+interface Props {
+  entries: (IndexEntry & { note?: string })[];
+}
+const { entries } = Astro.props;
+---
+
+<ul class="mon-list">
+  {
+    entries.map((e) => (
+      <li>
+        <a href={`/pokemon/${e.slug}/`} data-type={e.types[0]}>
+          <img src={e.sprite ?? e.artwork} alt="" width="56" height="56" loading="lazy" decoding="async" />
+          <span>
+            {e.name}
+            {e.note && <small>{e.note}</small>}
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ul>

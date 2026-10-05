@@ -1,0 +1,121 @@
+---
+import { gameBySlug, moveBySlug } from "../lib/data";
+import { categoryLabel, methodLabel } from "../lib/format";
+import type { LearnedMove } from "../lib/types";
+import TypeBadge from "./TypeBadge.astro";
+
+interface Props {
+  learnset: LearnedMove[];
+  game: string | null;
+  id: string;
+}
+const { learnset, game, id } = Astro.props;
+const gameName = game ? gameBySlug(game)?.name : null;
+const methods = (["level-up", "machine", "egg", "tutor"] as const)
+  .map((method) => ({
+    method,
+    rows: learnset
+      .filter((l) => l.method === method)
+      .map((l) => ({ ...l, info: moveBySlug(l.move)! }))
+      .filter((l) => l.info)
+      .sort((a, b) =>
+        method === "level-up" ? (a.level ?? 0) - (b.level ?? 0) : a.info.name.localeCompare(b.info.name),
+      ),
+  }))
+  .filter((m) => m.rows.length);
+---
+
+{
+  methods.length === 0 ? (
+    <p class="muted">No learnset recorded for this form.</p>
+  ) : (
+    <div class="learnset" data-tabs>
+      <div class="bar">
+        <div class="tabs" role="tablist" aria-label="How moves are learned">
+          {methods.map((m, i) => (
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              id={`${id}-tab-${m.method}`}
+              aria-controls={`${id}-${m.method}`}
+              aria-selected={i === 0 ? "true" : "false"}
+              aria-pressed={i === 0 ? "true" : "false"}
+            >
+              {methodLabel[m.method]} <span class="mono count">{m.rows.length}</span>
+            </button>
+          ))}
+        </div>
+        {gameName && <p class="label">Learnset from {gameName}</p>}
+      </div>
+      {methods.map((m, i) => (
+        <div
+          class="table-wrap"
+          role="tabpanel"
+          id={`${id}-${m.method}`}
+          aria-labelledby={`${id}-tab-${m.method}`}
+          hidden={i !== 0}
+        >
+          <table class="data">
+            <thead>
+              <tr>
+                {m.method === "level-up" && <th class="num">Lv.</th>}
+                <th>Move</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th class="num">Power</th>
+                <th class="num">Acc.</th>
+                <th class="num">PP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {m.rows.map((r) => (
+                <tr>
+                  {m.method === "level-up" && <td class="num">{r.level === 0 ? "Evo" : r.level}</td>}
+                  <td>
+                    <a href={`/moves/${r.info.slug}/`}>{r.info.name}</a>
+                  </td>
+                  <td>
+                    <TypeBadge type={r.info.type} />
+                  </td>
+                  <td>
+                    <span class={`cat ${r.info.category}`}>{categoryLabel[r.info.category]}</span>
+                  </td>
+                  <td class="num">{r.info.power ?? "—"}</td>
+                  <td class="num">{r.info.accuracy ? `${r.info.accuracy}%` : "—"}</td>
+                  <td class="num">{r.info.pp ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .count {
+    font-size: 0.72rem;
+    opacity: 0.65;
+  }
+
+  .table-wrap {
+    max-height: 560px;
+  }
+</style>

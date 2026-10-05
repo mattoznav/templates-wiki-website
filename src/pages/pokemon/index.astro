@@ -1,0 +1,143 @@
+---
+import Base from "../../layouts/Base.astro";
+import PokemonCard from "../../components/PokemonCard.astro";
+import { getGenerations, getIndex } from "../../lib/data";
+import { ROMAN, STAT_LABELS, TYPE_ORDER, typeName } from "../../lib/format";
+
+const entries = getIndex();
+const generations = getGenerations();
+---
+
+<Base title="All Pokémon" description={`All ${entries.length} Pokémon species, filterable by type, generation and stats.`}>
+  <header class="page-head">
+    <div class="wrap">
+      <span class="label">The guide</span>
+      <h1>All Pokémon</h1>
+      <p class="lede">
+        {entries.length.toLocaleString("en")} species from Kanto to Paldea. Filter by type and generation, or sort by any base stat.
+      </p>
+    </div>
+  </header>
+
+  <div class="filters" data-dex-filters>
+    <div class="wrap filter-row">
+      <label class="field grow">
+        <span class="sr-only">Search by name or number</span>
+        <input class="input" type="search" name="q" placeholder="Name or number" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span class="sr-only">Type</span>
+        <select class="select" name="type">
+          <option value="">All types</option>
+          {TYPE_ORDER.map((t) => <option value={t}>{typeName(t)}</option>)}
+        </select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Second type</span>
+        <select class="select" name="type2">
+          <option value="">Any second type</option>
+          <option value="none">Single type only</option>
+          {TYPE_ORDER.map((t) => <option value={t}>{typeName(t)}</option>)}
+        </select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Generation</span>
+        <select class="select" name="gen">
+          <option value="">All generations</option>
+          {generations.map((g) => <option value={g.number}>Gen {ROMAN[g.number]} · {g.region}</option>)}
+        </select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Sort</span>
+        <select class="select" name="sort">
+          <option value="id">Sort: number</option>
+          <option value="name">Sort: name</option>
+          <option value="total">Sort: base stat total</option>
+          {STAT_LABELS.map((s, i) => <option value={`stat-${i}`}>Sort: {s}</option>)}
+        </select>
+      </label>
+      <button class="chip" type="button" name="special" aria-pressed="false">Legendary and mythical</button>
+    </div>
+    <div class="wrap filter-meta">
+      <p class="label" aria-live="polite"><span data-count>{entries.length}</span> shown</p>
+      <button class="reset label" type="button" data-reset hidden>Clear filters</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid" data-dex>
+      {entries.map((entry, i) => <PokemonCard entry={entry} eager={i < 12} />)}
+    </div>
+    <p class="empty" data-empty hidden>No Pokémon match these filters.</p>
+  </div>
+</Base>
+
+<script>
+  import "../../scripts/dex";
+</script>
+
+<style>
+  .filters {
+    position: sticky;
+    top: 64px;
+    z-index: 20;
+    background: color-mix(in oklab, var(--paper) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding-block: 14px 8px;
+    margin-bottom: 24px;
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .field {
+    display: flex;
+  }
+
+  .field.grow {
+    flex: 1 1 200px;
+  }
+
+  .field.grow .input {
+    width: 100%;
+  }
+
+  .filter-row .chip {
+    height: 42px;
+  }
+
+  .filter-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .reset {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 720px) {
+    .filters {
+      position: static;
+    }
+
+    .field:not(.grow) {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    .field .select {
+      width: 100%;
+    }
+  }
+</style>

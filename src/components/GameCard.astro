@@ -1,0 +1,69 @@
+---
+import type { Game } from "../lib/types";
+
+interface Props {
+  game: Game;
+}
+const { game } = Astro.props;
+const kind = { original: "Main game", remake: "Remake", expansion: "Expansion", "spin-off": "Spin-off", other: "Other" }[
+  game.kind
+];
+---
+
+<article class="game" data-kind={game.kind}>
+  <div class="top">
+    <span class="mono year">{game.year ?? "—"}</span>
+    <span class="kind label">{kind}</span>
+  </div>
+  <h3>{game.name.startsWith("Let") || game.name.startsWith("The") ? game.name : `Pokémon ${game.name}`}</h3>
+  <p class="muted meta">
+    {game.platform ?? "Platform not listed"}
+    {game.regions.length > 0 && ` · ${game.regions.join(", ")}`}
+  </p>
+</article>
+
+<style>
+  .game {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+  }
+
+  .game[data-kind="remake"] {
+    border-left-color: #5a7fe0;
+  }
+
+  .game[data-kind="expansion"] {
+    border-left-color: #3fae7c;
+  }
+
+  .game[data-kind="spin-off"],
+  .game[data-kind="other"] {
+    border-left-color: var(--line-2);
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .year {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+
+  .meta {
+    font-size: 0.85rem;
+  }
+</style>

@@ -1,0 +1,32 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Page not found">
+  <section class="wrap lost">
+    <span class="label">Error 404</span>
+    <h1>This page wandered off.</h1>
+    <p class="lede">It may have evolved, or it was never in the guide. Try searching for it instead.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" data-open-search>Search the guide</button>
+      <a class="btn" href="/">Back to the start</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    padding-block: clamp(64px, 12vw, 160px);
+  }
+
+  .lost h1 {
+    margin: 14px 0 20px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+</style>

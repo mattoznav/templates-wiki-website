@@ -1,0 +1,112 @@
+---
+import Base from "../../layouts/Base.astro";
+import MoveTable from "../../components/MoveTable.astro";
+import { getMoves } from "../../lib/data";
+import { ROMAN, TYPE_ORDER, typeName } from "../../lib/format";
+
+const moves = getMoves();
+---
+
+<Base title="All moves" description={`All ${moves.length} moves with type, category, power, accuracy and PP.`}>
+  <header class="page-head">
+    <div class="wrap">
+      <span class="label">Moves</span>
+      <h1>All moves</h1>
+      <p class="lede">
+        {moves.length} moves. Search by name or effect, filter by type, category and generation, and sort any column.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="filters" data-move-filters>
+        <input class="input grow" type="search" name="q" placeholder="Name or effect, e.g. “burn”" aria-label="Search moves" />
+        <select class="select" name="type" aria-label="Type">
+          <option value="">All types</option>
+          {TYPE_ORDER.map((t) => <option value={t}>{typeName(t)}</option>)}
+        </select>
+        <select class="select" name="category" aria-label="Category">
+          <option value="">All categories</option>
+          <option value="physical">Physical</option>
+          <option value="special">Special</option>
+          <option value="status">Status</option>
+        </select>
+        <select class="select" name="gen" aria-label="Generation">
+          <option value="">All generations</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => <option value={g}>Generation {ROMAN[g]}</option>)}
+        </select>
+        <p class="label count" aria-live="polite"><span data-count>{moves.length}</span> shown</p>
+      </div>
+      <MoveTable moves={moves} />
+      <p class="empty" data-empty hidden>No moves match.</p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-move-filters]")!;
+  const rows = [...document.querySelectorAll<HTMLTableRowElement>("table[data-sortable] tbody tr")];
+  const q = root.querySelector<HTMLInputElement>("[name=q]")!;
+  const type = root.querySelector<HTMLSelectElement>("[name=type]")!;
+  const category = root.querySelector<HTMLSelectElement>("[name=category]")!;
+  const gen = root.querySelector<HTMLSelectElement>("[name=gen]")!;
+  const count = root.querySelector("[data-count]")!;
+  const empty = document.querySelector<HTMLElement>("[data-empty]")!;
+
+  function apply() {
+    const text = q.value.trim().toLowerCase();
+    let shown = 0;
+    for (const row of rows) {
+      const match =
+        (!text || row.dataset.search!.includes(text)) &&
+        (!type.value || row.dataset.type === type.value) &&
+        (!category.value || row.dataset.category === category.value) &&
+        (!gen.value || row.dataset.gen === gen.value);
+      row.hidden = !match;
+      if (match) shown++;
+    }
+    count.textContent = String(shown);
+    empty.hidden = shown > 0;
+    const params = new URLSearchParams();
+    if (text) params.set("q", text);
+    if (type.value) params.set("type", type.value);
+    if (category.value) params.set("category", category.value);
+    if (gen.value) params.set("gen", gen.value);
+    history.replaceState(null, "", params.size ? `?${params}` : location.pathname);
+  }
+
+  const initial = new URLSearchParams(location.search);
+  q.value = initial.get("q") ?? "";
+  type.value = initial.get("type") ?? "";
+  category.value = initial.get("category") ?? "";
+  gen.value = initial.get("gen") ?? "";
+  if (initial.size) apply();
+
+  q.addEventListener("input", apply);
+  [type, category, gen].forEach((el) => el.addEventListener("change", apply));
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .grow {
+    flex: 1 1 240px;
+  }
+
+  .count {
+    margin-left: auto;
+  }
+
+  @media (max-width: 640px) {
+    .select {
+      flex: 1 1 calc(50% - 8px);
+    }
+  }
+</style>

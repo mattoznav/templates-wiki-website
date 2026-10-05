@@ -1,0 +1,106 @@
+---
+import { STAT_LABELS, statTone } from "../lib/format";
+
+interface Props {
+  stats: number[];
+  total: number;
+}
+const { stats, total } = Astro.props;
+---
+
+<dl class="stats">
+  {
+    stats.map((value, i) => (
+      <div class="row">
+        <dt>{STAT_LABELS[i]}</dt>
+        <dd class="mono">{value}</dd>
+        <div class="track" aria-hidden="true">
+          <span class={`bar ${statTone(value)}`} style={`--w:${Math.min(100, (value / 200) * 100)}%`} />
+        </div>
+      </div>
+    ))
+  }
+  <div class="row total">
+    <dt>Total</dt>
+    <dd class="mono">{total}</dd>
+    <div class="track total-track" aria-hidden="true">
+      <span class="bar" style={`--w:${Math.min(100, (total / 720) * 100)}%`}></span>
+    </div>
+  </div>
+</dl>
+
+<style>
+  .stats {
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 76px 40px 1fr;
+    align-items: center;
+    gap: 12px;
+  }
+
+  dt {
+    font-size: 0.88rem;
+    color: var(--ink-2);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 500;
+  }
+
+  .track {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--paper-2);
+    overflow: hidden;
+  }
+
+  .bar {
+    display: block;
+    height: 100%;
+    width: var(--w);
+    border-radius: inherit;
+    background: var(--ink-2);
+    transform-origin: left;
+  }
+
+  .s1 { background: var(--s1); }
+  .s2 { background: var(--s2); }
+  .s3 { background: var(--s3); }
+  .s4 { background: var(--s4); }
+  .s5 { background: var(--s5); }
+  .s6 { background: var(--s6); }
+
+  .total {
+    padding-top: 10px;
+    border-top: 1px dashed var(--line-2);
+  }
+
+  .total dt,
+  .total dd {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .total-track .bar {
+    background: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bar {
+      animation: grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    @keyframes grow {
+      from {
+        transform: scaleX(0);
+      }
+    }
+  }
+</style>

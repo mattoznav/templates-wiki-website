@@ -1,0 +1,107 @@
+---
+import TypeBadge from "./TypeBadge.astro";
+import { ROMAN, categoryLabel } from "../lib/format";
+import type { Move } from "../lib/types";
+
+interface Props {
+  moves: Move[];
+  showType?: boolean;
+  showEffect?: boolean;
+  maxHeight?: boolean;
+}
+const { moves, showType = true, showEffect = true, maxHeight = true } = Astro.props;
+---
+
+<div class:list={["table-wrap", { capped: maxHeight }]}>
+  <table class="data" data-sortable>
+    <thead>
+      <tr>
+        <th aria-sort="ascending"><button type="button" data-key="name">Move</button></th>
+        {showType && <th><button type="button" data-key="type">Type</button></th>}
+        <th><button type="button" data-key="category">Category</button></th>
+        <th class="num"><button type="button" data-key="power" data-numeric>Power</button></th>
+        <th class="num"><button type="button" data-key="accuracy" data-numeric>Acc.</button></th>
+        <th class="num"><button type="button" data-key="pp" data-numeric>PP</button></th>
+        <th class="num"><button type="button" data-key="gen" data-numeric>Gen</button></th>
+        {showEffect && <th class="effect-col">Effect</th>}
+      </tr>
+    </thead>
+    <tbody>
+      {
+        moves.map((m) => (
+          <tr
+            data-name={m.name}
+            data-type={m.type}
+            data-category={m.category}
+            data-power={m.power ?? -1}
+            data-accuracy={m.accuracy ?? -1}
+            data-pp={m.pp ?? -1}
+            data-gen={m.generation}
+            data-search={`${m.name} ${m.effect ?? ""}`.toLowerCase()}
+          >
+            <td>
+              <a href={`/moves/${m.slug}/`}>{m.name}</a>
+            </td>
+            {showType && (
+              <td>
+                <TypeBadge type={m.type} />
+              </td>
+            )}
+            <td>
+              <span class={`cat ${m.category}`}>{categoryLabel[m.category]}</span>
+            </td>
+            <td class="num">{m.power ?? "—"}</td>
+            <td class="num">{m.accuracy ? `${m.accuracy}%` : "—"}</td>
+            <td class="num">{m.pp ?? "—"}</td>
+            <td class="num">{ROMAN[m.generation]}</td>
+            {showEffect && <td class="effect">{m.effect}</td>}
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // Click a column header to sort; click again to reverse.
+  document.querySelectorAll<HTMLTableElement>("table[data-sortable]").forEach((table) => {
+    const body = table.tBodies[0];
+    table.querySelectorAll<HTMLButtonElement>("th button[data-key]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const th = button.parentElement!;
+        const key = button.dataset.key!;
+        const numeric = "numeric" in button.dataset;
+        const dir = th.getAttribute("aria-sort") === "ascending" ? "descending" : numeric && !th.hasAttribute("aria-sort") ? "descending" : "ascending";
+        table.querySelectorAll("th").forEach((h) => h.removeAttribute("aria-sort"));
+        th.setAttribute("aria-sort", dir);
+        const sign = dir === "ascending" ? 1 : -1;
+        const rows = [...body.rows].sort((a, b) => {
+          const x = a.dataset[key] ?? "";
+          const y = b.dataset[key] ?? "";
+          const r = numeric ? Number(x) - Number(y) : x.localeCompare(y);
+          return r * sign || (a.dataset.name ?? "").localeCompare(b.dataset.name ?? "");
+        });
+        body.append(...rows);
+      });
+    });
+  });
+</script>
+
+<style>
+  .capped {
+    max-height: 70vh;
+  }
+
+  .effect {
+    min-width: 280px;
+    font-size: 0.85rem;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 760px) {
+    .effect-col,
+    .effect {
+      display: none;
+    }
+  }
+</style>

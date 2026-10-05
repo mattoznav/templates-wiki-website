@@ -1,0 +1,142 @@
+---
+import Base from "../../layouts/Base.astro";
+import PokemonList from "../../components/PokemonList.astro";
+import TypeBadge from "../../components/TypeBadge.astro";
+import MoveTable from "../../components/MoveTable.astro";
+import { getIndex, getMoves, getTypes } from "../../lib/data";
+import { ROMAN } from "../../lib/format";
+import type { TypeInfo } from "../../lib/types";
+
+export function getStaticPaths() {
+  return getTypes().map((type) => ({ params: { slug: type.slug }, props: { type } }));
+}
+
+const { type } = Astro.props as { type: TypeInfo };
+const types = getTypes();
+const pick = (rel: Record<string, number>, m: number) => types.filter((t) => rel[t.slug] === m).map((t) => t.slug);
+const relations = [
+  { title: "Attacking", rows: [
+    { label: "Super effective against", list: pick(type.attack, 2), tone: "good" },
+    { label: "Not very effective against", list: pick(type.attack, 0.5), tone: "bad" },
+    { label: "No effect on", list: pick(type.attack, 0), tone: "none" },
+  ] },
+  { title: "Defending", rows: [
+    { label: "Weak to", list: pick(type.defense, 2), tone: "bad" },
+    { label: "Resists", list: pick(type.defense, 0.5), tone: "good" },
+    { label: "Immune to", list: pick(type.defense, 0), tone: "good" },
+  ] },
+];
+const pokemon = getIndex().filter((e) => e.types.includes(type.slug));
+const pure = pokemon.filter((e) => e.types.length === 1);
+const moves = getMoves().filter((m) => m.type === type.slug);
+---
+
+<Base title={`${type.name} type`} description={`${type.name}-type Pokémon and moves, and how ${type.name} attacks and defends against every other type.`}>
+  <header class="page-head type-head" data-type={type.slug}>
+    <div class="wrap">
+      <a class="label back" href="/types/">← All types</a>
+      <h1><span class="swatch" aria-hidden="true"></span>{type.name}</h1>
+      <p class="lede">
+        Introduced in Generation {ROMAN[type.generation]}. {pokemon.length} Pokémon have this type ({pure.length} of them
+        only this type) and {moves.length} moves use it.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap rel-grid">
+      {
+        relations.map((group) => (
+          <div class="panel rel">
+            <h2 class="h">{group.title}</h2>
+            <dl>
+              {group.rows.map((row) => (
+                <div class={row.tone}>
+                  <dt class="label">{row.label}</dt>
+                  <dd class="types">
+                    {row.list.length ? row.list.map((t) => <TypeBadge type={t} />) : <span class="muted">Nothing</span>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>{type.name} Pokémon</h2>
+        <a class="label" href={`/pokemon/?type=${type.slug}`}>Filter in the full list →</a>
+      </div>
+      <PokemonList entries={pokemon} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>{type.name} moves</h2>
+        <p>{moves.length} moves</p>
+      </div>
+      <MoveTable moves={moves} showType={false} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .type-head {
+    background: linear-gradient(180deg, color-mix(in oklab, var(--c) 14%, var(--paper)), var(--paper));
+  }
+
+  .back {
+    text-decoration: none;
+  }
+
+  .type-head h1 {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .swatch {
+    width: 0.62em;
+    height: 0.62em;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: 0 0 0 8px color-mix(in oklab, var(--c) 22%, transparent);
+  }
+
+  .rel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .rel {
+    padding: 22px;
+  }
+
+  .h {
+    font-size: 1.35rem;
+    margin-bottom: 16px;
+  }
+
+  .rel dl {
+    margin: 0;
+    display: grid;
+    gap: 16px;
+  }
+
+  .rel dd {
+    margin: 8px 0 0;
+  }
+
+  @media (max-width: 760px) {
+    .rel-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

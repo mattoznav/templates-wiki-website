@@ -1,0 +1,120 @@
+---
+import Base from "../../layouts/Base.astro";
+import PokemonList from "../../components/PokemonList.astro";
+import { entryBySlug, getAbilities } from "../../lib/data";
+import { ROMAN } from "../../lib/format";
+import type { Ability, IndexEntry } from "../../lib/types";
+
+export function getStaticPaths() {
+  return getAbilities().map((ability) => ({ params: { slug: ability.slug }, props: { ability } }));
+}
+
+const { ability } = Astro.props as { ability: Ability };
+const holders = ability.pokemon
+  .map((p) => ({ ...p, entry: entryBySlug(p.species) }))
+  .filter((p): p is typeof p & { entry: IndexEntry } => Boolean(p.entry))
+  .sort((a, b) => a.entry.id - b.entry.id);
+const regular = holders.filter((h) => !h.hidden);
+const hidden = holders.filter((h) => h.hidden);
+const formNote = (form: string | null) =>
+  form ? `${form.split("-").slice(1).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")} form` : undefined;
+---
+
+<Base title={`${ability.name} (ability)`} description={`${ability.name}: ${ability.effect ?? ""}`}>
+  <header class="page-head">
+    <div class="wrap">
+      <a class="label back" href="/abilities/">← All abilities</a>
+      <h1>{ability.name}</h1>
+      <p class="label gen">Generation {ROMAN[ability.generation]} · {holders.length} species</p>
+      {ability.effect && <p class="lede">{ability.effect}</p>}
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap text-grid">
+      {
+        ability.longEffect && ability.longEffect !== ability.effect && (
+          <div class="prose">
+            <h2>In detail</h2>
+            <p>{ability.longEffect}</p>
+          </div>
+        )
+      }
+      {
+        ability.flavor && (
+          <blockquote class="flavor panel">
+            <p class="label">In-game description</p>
+            <p>{ability.flavor}</p>
+          </blockquote>
+        )
+      }
+    </div>
+  </section>
+
+  {
+    regular.length > 0 && (
+      <section class="section">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Pokémon with {ability.name}</h2>
+            <p>{regular.length} species</p>
+          </div>
+          <PokemonList entries={regular.map((h) => ({ ...h.entry, note: formNote(h.form) }))} />
+        </div>
+      </section>
+    )
+  }
+
+  {
+    hidden.length > 0 && (
+      <section class="section">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>As a hidden ability</h2>
+            <p>{hidden.length} species</p>
+          </div>
+          <PokemonList entries={hidden.map((h) => ({ ...h.entry, note: formNote(h.form) }))} />
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .back {
+    text-decoration: none;
+  }
+
+  .page-head h1 {
+    margin-top: 10px;
+  }
+
+  .gen {
+    margin: 14px 0 18px;
+  }
+
+  .text-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .flavor {
+    margin: 0;
+    padding: 20px;
+  }
+
+  .flavor p + p {
+    margin-top: 8px;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-style: italic;
+  }
+
+  @media (max-width: 820px) {
+    .text-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
