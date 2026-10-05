@@ -285,6 +285,12 @@ const moves = movesRaw
     };
   })
   .sort((a, b) => a.name.localeCompare(b.name));
+// Z-Moves come in a physical and a special version with the same name
+const moveNameCounts = new Map();
+for (const m of moves) moveNameCounts.set(m.name, (moveNameCounts.get(m.name) ?? 0) + 1);
+for (const m of moves) {
+  if (moveNameCounts.get(m.name) > 1) m.name = `${m.name} (${m.category[0].toUpperCase()}${m.category.slice(1)})`;
+}
 const moveBySlug = new Map(moves.map((m) => [m.slug, m]));
 
 // Abilities
