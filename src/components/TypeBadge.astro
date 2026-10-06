@@ -1,5 +1,6 @@
 ---
 import { typeName } from "../lib/format";
+import { withBase } from "../lib/paths";
 
 interface Props {
   type: string;
@@ -13,5 +14,5 @@ const Tag = link ? "a" : "span";
 <Tag
   class:list={["type", { lg: size === "lg" }]}
   data-type={type}
-  href={link ? `/types/${type}/` : undefined}>{typeName(type)}</Tag
+  href={link ? withBase(`/types/${type}/`) : undefined}>{typeName(type)}</Tag
 >

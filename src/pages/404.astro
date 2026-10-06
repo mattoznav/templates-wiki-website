@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { withBase } from "../lib/paths";
 ---
 
 <Base title="Page not found">
@@ -9,7 +10,7 @@ import Base from "../layouts/Base.astro";
     <p class="lede">It may have evolved, or it was never in the guide. Try searching for it instead.</p>
     <div class="actions">
       <button class="btn primary" type="button" data-open-search>Search the guide</button>
-      <a class="btn" href="/">Back to the start</a>
+      <a class="btn" href={withBase("/")}>Back to the start</a>
     </div>
   </section>
 </Base>

@@ -6,6 +6,7 @@ import MoveTable from "../../components/MoveTable.astro";
 import { getIndex, getMoves, getTypes } from "../../lib/data";
 import { ROMAN } from "../../lib/format";
 import type { TypeInfo } from "../../lib/types";
+import { withBase } from "../../lib/paths";
 
 export function getStaticPaths() {
   return getTypes().map((type) => ({ params: { slug: type.slug }, props: { type } }));
@@ -34,7 +35,7 @@ const moves = getMoves().filter((m) => m.type === type.slug);
 <Base title={`${type.name} type`} description={`${type.name}-type Pokémon and moves, and how ${type.name} attacks and defends against every other type.`}>
   <header class="page-head type-head" data-type={type.slug}>
     <div class="wrap">
-      <a class="label back" href="/types/">← All types</a>
+      <a class="label back" href={withBase("/types/")}>← All types</a>
       <h1><span class="swatch" aria-hidden="true"></span>{type.name}</h1>
       <p class="lede">
         Introduced in Generation {ROMAN[type.generation]}. {pokemon.length} Pokémon have this type ({pure.length} of them
@@ -69,7 +70,7 @@ const moves = getMoves().filter((m) => m.type === type.slug);
     <div class="wrap">
       <div class="section-head">
         <h2>{type.name} Pokémon</h2>
-        <a class="label" href={`/pokemon/?type=${type.slug}`}>Filter in the full list →</a>
+        <a class="label" href={withBase(`/pokemon/?type=${type.slug}`)}>Filter in the full list →</a>
       </div>
       <PokemonList entries={pokemon} />
     </div>

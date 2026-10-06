@@ -6,6 +6,7 @@ import TypeBadge from "../../components/TypeBadge.astro";
 import { entryById, getGames, getGenerations } from "../../lib/data";
 import { ROMAN } from "../../lib/format";
 import type { Generation, IndexEntry } from "../../lib/types";
+import { withBase } from "../../lib/paths";
 
 export function getStaticPaths() {
   const all = getGenerations();
@@ -40,7 +41,7 @@ const facts = [
 >
   <header class="page-head">
     <div class="wrap">
-      <a class="label back" href="/games/">← All games</a>
+      <a class="label back" href={withBase("/games/")}>← All games</a>
       <h1><span class="mono roman">{ROMAN[generation.number]}</span> {generation.region}</h1>
       <p class="lede">
         {generation.name}, {years.length ? `${Math.min(...years)}${Math.max(...years) !== Math.min(...years) ? `–${Math.max(...years)}` : ""}` : ""}.
@@ -84,7 +85,7 @@ const facts = [
     <div class="wrap">
       <div class="section-head">
         <h2>Pokémon introduced</h2>
-        <a class="label" href={`/pokemon/?gen=${generation.number}`}>Filter in the full list →</a>
+        <a class="label" href={withBase(`/pokemon/?gen=${generation.number}`)}>Filter in the full list →</a>
       </div>
       <div class="grid">
         {species.map((e, i) => <PokemonCard entry={e} eager={i < 6} />)}
@@ -93,8 +94,8 @@ const facts = [
   </section>
 
   <nav class="wrap pager" aria-label="Generations">
-    {prev ? <a class="btn" href={`/games/${prev.slug}/`}>← {prev.name} · {prev.region}</a> : <span />}
-    {next && <a class="btn" href={`/games/${next.slug}/`}>{next.name} · {next.region} →</a>}
+    {prev ? <a class="btn" href={withBase(`/games/${prev.slug}/`)}>← {prev.name} · {prev.region}</a> : <span />}
+    {next && <a class="btn" href={withBase(`/games/${next.slug}/`)}>{next.name} · {next.region} →</a>}
   </nav>
 </Base>
 

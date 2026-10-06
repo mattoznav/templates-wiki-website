@@ -3,6 +3,7 @@ import Base from "../../layouts/Base.astro";
 import GameCard from "../../components/GameCard.astro";
 import { entryById, getGames, getGenerations } from "../../lib/data";
 import { ROMAN } from "../../lib/format";
+import { withBase } from "../../lib/paths";
 
 const games = getGames();
 const generations = getGenerations().map((g) => {
@@ -44,7 +45,7 @@ const generations = getGenerations().map((g) => {
             <span class="roman mono">{ROMAN[g.number]}</span>
             <div class="gen-info">
               <h2>
-                <a href={`/games/${g.slug}/`}>{g.region}</a>
+                <a href={withBase(`/games/${g.slug}/`)}>{g.region}</a>
               </h2>
               <p class="label">
                 {g.from}
@@ -55,7 +56,7 @@ const generations = getGenerations().map((g) => {
                   <img src={m!.artwork} alt="" width="64" height="64" loading="lazy" />
                 ))}
               </div>
-              <a class="btn sm" href={`/games/${g.slug}/`}>
+              <a class="btn sm" href={withBase(`/games/${g.slug}/`)}>
                 Generation {ROMAN[g.number]} →
               </a>
             </div>

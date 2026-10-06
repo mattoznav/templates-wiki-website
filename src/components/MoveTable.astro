@@ -2,6 +2,7 @@
 import TypeBadge from "./TypeBadge.astro";
 import { ROMAN, categoryLabel } from "../lib/format";
 import type { Move } from "../lib/types";
+import { withBase } from "../lib/paths";
 
 interface Props {
   moves: Move[];
@@ -40,7 +41,7 @@ const { moves, showType = true, showEffect = true, maxHeight = true } = Astro.pr
             data-search={`${m.name} ${m.effect ?? ""}`.toLowerCase()}
           >
             <td>
-              <a href={`/moves/${m.slug}/`}>{m.name}</a>
+              <a href={withBase(`/moves/${m.slug}/`)}>{m.name}</a>
             </td>
             {showType && (
               <td>

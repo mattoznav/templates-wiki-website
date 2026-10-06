@@ -2,6 +2,7 @@
 import { entryBySlug } from "../lib/data";
 import { pad } from "../lib/format";
 import type { Chain } from "../lib/types";
+import { withBase } from "../lib/paths";
 
 interface Props {
   node: Chain;
@@ -27,7 +28,7 @@ const entry = entryBySlug(node.species);
     entry && (
       <a
         class="mon"
-        href={`/pokemon/${entry.slug}/`}
+        href={withBase(`/pokemon/${entry.slug}/`)}
         data-type={entry.types[0]}
         aria-current={entry.slug === current ? "page" : undefined}
       >

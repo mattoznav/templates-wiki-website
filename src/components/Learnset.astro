@@ -3,6 +3,7 @@ import { gameBySlug, moveBySlug } from "../lib/data";
 import { categoryLabel, methodLabel } from "../lib/format";
 import type { LearnedMove } from "../lib/types";
 import TypeBadge from "./TypeBadge.astro";
+import { withBase } from "../lib/paths";
 
 interface Props {
   learnset: LearnedMove[];
@@ -73,7 +74,7 @@ const methods = (["level-up", "machine", "egg", "tutor"] as const)
                 <tr>
                   {m.method === "level-up" && <td class="num">{r.level === 0 ? "Evo" : r.level}</td>}
                   <td>
-                    <a href={`/moves/${r.info.slug}/`}>{r.info.name}</a>
+                    <a href={withBase(`/moves/${r.info.slug}/`)}>{r.info.name}</a>
                   </td>
                   <td>
                     <TypeBadge type={r.info.type} />

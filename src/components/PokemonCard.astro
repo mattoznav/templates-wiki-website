@@ -1,6 +1,7 @@
 ---
 import type { IndexEntry } from "../lib/types";
 import { pad } from "../lib/format";
+import { withBase } from "../lib/paths";
 
 interface Props {
   entry: IndexEntry;
@@ -14,7 +15,7 @@ const { entry, note, eager = false, compact = false } = Astro.props;
 
 <a
   class:list={["card", { compact }]}
-  href={`/pokemon/${entry.slug}/`}
+  href={withBase(`/pokemon/${entry.slug}/`)}
   data-type={entry.types[0]}
   data-id={entry.id}
   data-name={entry.name.toLowerCase()}

@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import { getAbilities } from "../../lib/data";
 import { ROMAN } from "../../lib/format";
+import { withBase } from "../../lib/paths";
 
 const abilities = getAbilities();
 ---
@@ -43,7 +44,7 @@ const abilities = getAbilities();
               abilities.map((a) => (
                 <tr data-search={`${a.name} ${a.effect ?? ""}`.toLowerCase()} data-gen={a.generation}>
                   <td class="name">
-                    <a href={`/abilities/${a.slug}/`}>{a.name}</a>
+                    <a href={withBase(`/abilities/${a.slug}/`)}>{a.name}</a>
                   </td>
                   <td class="effect">{a.effect}</td>
                   <td class="num">{a.pokemon.length}</td>

@@ -5,6 +5,7 @@ import TypeBadge from "../../components/TypeBadge.astro";
 import { entriesBySlugs, getMoves } from "../../lib/data";
 import { ROMAN, categoryLabel } from "../../lib/format";
 import type { Move } from "../../lib/types";
+import { withBase } from "../../lib/paths";
 
 export function getStaticPaths() {
   return getMoves().map((move) => ({ params: { slug: move.slug }, props: { move } }));
@@ -23,7 +24,7 @@ const facts = [
 <Base title={`${move.name} (move)`} description={`${move.name}: ${move.type} ${move.category} move. ${move.effect ?? ""}`}>
   <header class="page-head move-head" data-type={move.type}>
     <div class="wrap">
-      <a class="label back" href="/moves/">← All moves</a>
+      <a class="label back" href={withBase("/moves/")}>← All moves</a>
       <h1>{move.name}</h1>
       <div class="tags">
         <TypeBadge type={move.type} size="lg" />

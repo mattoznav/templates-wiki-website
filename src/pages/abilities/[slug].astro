@@ -4,6 +4,7 @@ import PokemonList from "../../components/PokemonList.astro";
 import { entryBySlug, getAbilities } from "../../lib/data";
 import { ROMAN } from "../../lib/format";
 import type { Ability, IndexEntry } from "../../lib/types";
+import { withBase } from "../../lib/paths";
 
 export function getStaticPaths() {
   return getAbilities().map((ability) => ({ params: { slug: ability.slug }, props: { ability } }));
@@ -23,7 +24,7 @@ const formNote = (form: string | null) =>
 <Base title={`${ability.name} (ability)`} description={`${ability.name}: ${ability.effect ?? ""}`}>
   <header class="page-head">
     <div class="wrap">
-      <a class="label back" href="/abilities/">← All abilities</a>
+      <a class="label back" href={withBase("/abilities/")}>← All abilities</a>
       <h1>{ability.name}</h1>
       <p class="label gen">Generation {ROMAN[ability.generation]} · {holders.length} species</p>
       {ability.effect && <p class="lede">{ability.effect}</p>}

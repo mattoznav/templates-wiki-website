@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Logo from "../components/Logo.astro";
 import { getMeta } from "../lib/data";
+import { withBase } from "../lib/paths";
 
 interface Props {
   title?: string;
@@ -20,11 +21,11 @@ const path = Astro.url.pathname;
 const meta = getMeta();
 
 const nav = [
-  { href: "/pokemon/", label: "Pokémon" },
-  { href: "/types/", label: "Types" },
-  { href: "/moves/", label: "Moves" },
-  { href: "/abilities/", label: "Abilities" },
-  { href: "/games/", label: "Games" },
+  { href: withBase("/pokemon/"), label: "Pokémon" },
+  { href: withBase("/types/"), label: "Types" },
+  { href: withBase("/moves/"), label: "Moves" },
+  { href: withBase("/abilities/"), label: "Abilities" },
+  { href: withBase("/games/"), label: "Games" },
 ];
 ---
 
@@ -36,7 +37,7 @@ const nav = [
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={withBase("/favicon.svg")} type="image/svg+xml" />
     <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={desc} />
@@ -56,7 +57,7 @@ const nav = [
     <a class="skip" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap bar">
-        <a class="brand" href="/" aria-label="Fieldbook home">
+        <a class="brand" href={withBase("/")} aria-label="Fieldbook home">
           <Logo />
           <span>Fieldbook</span>
         </a>
@@ -106,14 +107,14 @@ const nav = [
     <footer class="site-footer">
       <div class="wrap foot">
         <div class="foot-brand">
-          <a class="brand" href="/"><Logo size={26} /><span>Fieldbook</span></a>
+          <a class="brand" href={withBase("/")}><Logo size={26} /><span>Fieldbook</span></a>
           <p class="muted">
             An unofficial field guide to {meta.counts.species.toLocaleString("en")} Pokémon, built from open data.
           </p>
         </div>
         <nav class="foot-links" aria-label="Footer">
           {nav.map((item) => <a href={item.href}>{item.label}</a>)}
-          <a href="/about/">About and credits</a>
+          <a href={withBase("/about/")}>About and credits</a>
         </nav>
         <p class="legal">
           Data from <a href="https://pokeapi.co/">PokéAPI</a>. Pokémon and Pokémon character names are trademarks of

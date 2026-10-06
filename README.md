@@ -11,6 +11,8 @@ Astro, no UI framework, no backend. Part of the [`templates-wiki`](https://githu
 
 No API key, account or database is needed.
 
+Live demo: [mattoznav.github.io/templates-wiki-website](https://mattoznav.github.io/templates-wiki-website/)
+
 ## Quick start
 
 ```bash
@@ -70,12 +72,13 @@ Press `/` or `Ctrl K` / `⌘ K` on any page to search Pokémon, moves, abilities
 
 ```
 scripts/fetch-data.mjs   download and transform the data
-src/lib/                 data access (build time), types and formatting helpers
+src/lib/                 data access (build time), types, formatting helpers and withBase()
 src/components/          cards, type badges, stat bars, matchups, evolution tree, learnset, tables
 src/layouts/Base.astro   header, footer, search dialog, theme switch
 src/pages/               one file per route
 src/scripts/             browser code: search, tabs, filters, form switcher
 src/styles/global.css    design tokens and shared styles
+.github/workflows/       GitHub Pages deployment
 ```
 
 ## Customising
@@ -84,10 +87,13 @@ src/styles/global.css    design tokens and shared styles
 - Release years, platforms and the kind of each game (main game, remake, expansion, spin-off) are in `GAME_FACTS` in `scripts/fetch-data.mjs`, because PokéAPI does not carry them.
 - The featured entries on the home page are listed in `src/pages/index.astro`.
 - Set the real domain in `astro.config.mjs` (`site`) before deploying, so canonical URLs and the sitemap are correct.
+- Internal links go through `withBase()` from `src/lib/paths.ts`, so the site also works under a sub-path such as `https://<user>.github.io/<repository>/`. Use it for new links too.
 
 ## Deploying
 
 `npm run build` produces a plain static site in `dist/` that any static host can serve. On a host that builds from Git, the first build downloads the data; keep `.cache/` between builds if the host allows it, to make later builds take seconds.
+
+`.github/workflows/pages.yml` publishes the site on GitHub Pages at every push to `main`, keeping the PokéAPI responses in the Actions cache. To use it in a copy of the repository, open **Settings > Pages** and set **Source** to **GitHub Actions**. The workflow passes the Pages address to the build through `SITE_URL` and `BASE_PATH`; with a custom domain the path is simply `/`.
 
 ## Credits and trademarks
 

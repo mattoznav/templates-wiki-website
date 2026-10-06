@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import { getIndex, getMoves, getTypes } from "../../lib/data";
 import { ROMAN, multiplierLabel } from "../../lib/format";
+import { withBase } from "../../lib/paths";
 
 const types = getTypes();
 const index = getIndex();
@@ -32,7 +33,7 @@ const summary = types.map((t) => ({
       <div class="types-grid">
         {
           summary.map((t) => (
-            <a class="tcard" href={`/types/${t.slug}/`} data-type={t.slug}>
+            <a class="tcard" href={withBase(`/types/${t.slug}/`)} data-type={t.slug}>
               <span class="tc-head">
                 <span class="tc-name">{t.name}</span>
                 <span class="label">Gen {ROMAN[t.generation]}</span>
@@ -69,7 +70,7 @@ const summary = types.map((t) => ({
               {
                 types.map((t, i) => (
                   <th scope="col" data-col={i}>
-                    <a href={`/types/${t.slug}/`} class="head" data-type={t.slug} title={t.name}>
+                    <a href={withBase(`/types/${t.slug}/`)} class="head" data-type={t.slug} title={t.name}>
                       {t.name.slice(0, 3)}
                     </a>
                   </th>
@@ -82,7 +83,7 @@ const summary = types.map((t) => ({
               types.map((atk) => (
                 <tr>
                   <th scope="row">
-                    <a href={`/types/${atk.slug}/`} class="row-head" data-type={atk.slug}>
+                    <a href={withBase(`/types/${atk.slug}/`)} class="row-head" data-type={atk.slug}>
                       {atk.name}
                     </a>
                   </th>

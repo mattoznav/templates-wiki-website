@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { getGames, getGenerations, getIndex, getMeta, getTypes, entryById } from "../lib/data";
 import { ROMAN, pad } from "../lib/format";
+import { withBase } from "../lib/paths";
 
 const index = getIndex();
 const meta = getMeta();
@@ -74,7 +75,7 @@ const stats = [
 
       {
         first && (
-          <a class="specimen" href={`/pokemon/${first.slug}/`} data-type={first.types[0]} data-featured={JSON.stringify(featured)}>
+          <a class="specimen" href={withBase(`/pokemon/${first.slug}/`)} data-type={first.types[0]} data-featured={JSON.stringify(featured)}>
             <span class="pin label">Featured entry</span>
             <span class="specimen-art dots">
               <img src={first.artwork} alt="" width="360" height="360" fetchpriority="high" />
@@ -113,12 +114,12 @@ const stats = [
     <div class="wrap">
       <div class="section-head">
         <h2>Browse by generation</h2>
-        <a href="/games/" class="label">All games →</a>
+        <a href={withBase("/games/")} class="label">All games →</a>
       </div>
       <div class="gens">
         {
           generations.map((g) => (
-            <a class="gen" href={`/games/${g.slug}/`}>
+            <a class="gen" href={withBase(`/games/${g.slug}/`)}>
               <span class="gen-top">
                 <span class="mono roman">{ROMAN[g.number]}</span>
                 <span class="label">{g.from}</span>
@@ -141,12 +142,12 @@ const stats = [
     <div class="wrap">
       <div class="section-head">
         <h2>Browse by type</h2>
-        <a href="/types/" class="label">Type chart →</a>
+        <a href={withBase("/types/")} class="label">Type chart →</a>
       </div>
       <div class="type-grid">
         {
           types.map((t) => (
-            <a class="type-tile" href={`/types/${t.slug}/`} data-type={t.slug}>
+            <a class="type-tile" href={withBase(`/types/${t.slug}/`)} data-type={t.slug}>
               <span class="tt-name">{t.name}</span>
               <span class="mono tt-count">{typeCounts.get(t.slug)}</span>
             </a>
@@ -176,10 +177,12 @@ const stats = [
 </Base>
 
 <script>
+  import { withBase } from "../lib/paths";
+
   // Random entry
   document.querySelector<HTMLButtonElement>("[data-random]")?.addEventListener("click", (e) => {
     const slugs = (e.currentTarget as HTMLElement).dataset.random!.split(" ");
-    location.href = `/pokemon/${slugs[Math.floor(Math.random() * slugs.length)]}/`;
+    location.href = withBase(`/pokemon/${slugs[Math.floor(Math.random() * slugs.length)]}/`);
   });
 
   // A different featured entry on each visit
@@ -189,7 +192,7 @@ const stats = [
       slug: string; name: string; id: number; genus: string; types: string[]; artwork: string;
     }[];
     const pick = list[Math.floor(Math.random() * list.length)];
-    card.href = `/pokemon/${pick.slug}/`;
+    card.href = withBase(`/pokemon/${pick.slug}/`);
     card.dataset.type = pick.types[0];
     card.querySelector("img")!.src = pick.artwork;
     card.querySelector(".no")!.textContent = `#${String(pick.id).padStart(4, "0")}`;

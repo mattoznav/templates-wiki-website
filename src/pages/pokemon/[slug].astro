@@ -8,6 +8,7 @@ import Learnset from "../../components/Learnset.astro";
 import { getChains, getSpecies, entryById } from "../../lib/data";
 import { ROMAN, dexNo, formatHeight, formatWeight, gender, pad, pct } from "../../lib/format";
 import type { Species } from "../../lib/types";
+import { withBase } from "../../lib/paths";
 
 export function getStaticPaths() {
   return getSpecies().map((species) => ({ params: { slug: species.slug }, props: { species } }));
@@ -37,18 +38,18 @@ const catchChance = Math.round((species.captureRate / 255) * 1000) / 10;
   image={main.artwork}
 >
   <div class="wrap crumbs">
-    <a href="/pokemon/" class="label">← All Pokémon</a>
+    <a href={withBase("/pokemon/")} class="label">← All Pokémon</a>
     <div class="pager">
       {
         prev && (
-          <a href={`/pokemon/${prev.slug}/`} rel="prev">
+          <a href={withBase(`/pokemon/${prev.slug}/`)} rel="prev">
             <span class="mono">#{pad(prev.id)}</span> {prev.name}
           </a>
         )
       }
       {
         next && (
-          <a href={`/pokemon/${next.slug}/`} rel="next">
+          <a href={withBase(`/pokemon/${next.slug}/`)} rel="next">
             {next.name} <span class="mono">#{pad(next.id)}</span>
           </a>
         )
@@ -99,7 +100,7 @@ const catchChance = Math.round((species.captureRate / 255) * 1000) / 10;
 
       <div class="intro rise">
         <p class="label">
-          {dexNo(species.id)} · <a href={`/games/generation-${ROMAN[species.generation].toLowerCase()}/`}>Generation {ROMAN[species.generation]}</a>
+          {dexNo(species.id)} · <a href={withBase(`/games/generation-${ROMAN[species.generation].toLowerCase()}/`)}>Generation {ROMAN[species.generation]}</a>
           {status && <span class="status">{status}</span>}
         </p>
         <h1>{species.name}</h1>
@@ -159,7 +160,7 @@ const catchChance = Math.round((species.captureRate / 255) * 1000) / 10;
                   <dt class="label">Abilities</dt>
                   <dd class="abilities">
                     {v.abilities.map((a) => (
-                      <a href={`/abilities/${a.slug}/`}>
+                      <a href={withBase(`/abilities/${a.slug}/`)}>
                         {a.name}
                         {a.hidden && <span class="hidden-tag">hidden</span>}
                       </a>
@@ -280,7 +281,7 @@ const catchChance = Math.round((species.captureRate / 255) * 1000) / 10;
   <nav class="wrap neighbours" aria-label="Neighbouring entries">
     {
       prev ? (
-        <a href={`/pokemon/${prev.slug}/`} class="nb" data-type={prev.types[0]}>
+        <a href={withBase(`/pokemon/${prev.slug}/`)} class="nb" data-type={prev.types[0]}>
           <img src={prev.artwork} alt="" width="72" height="72" loading="lazy" />
           <span>
             <span class="label">Previous · #{pad(prev.id)}</span>
@@ -293,7 +294,7 @@ const catchChance = Math.round((species.captureRate / 255) * 1000) / 10;
     }
     {
       next && (
-        <a href={`/pokemon/${next.slug}/`} class="nb right" data-type={next.types[0]}>
+        <a href={withBase(`/pokemon/${next.slug}/`)} class="nb right" data-type={next.types[0]}>
           <span>
             <span class="label">Next · #{pad(next.id)}</span>
             <span class="nb-name">{next.name}</span>

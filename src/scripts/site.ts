@@ -1,5 +1,7 @@
 // Behaviour shared by every page: theme switch, mobile menu and the search dialog.
 
+import { withBase } from "../lib/paths";
+
 const root = document.documentElement;
 
 // Theme ---------------------------------------------------------------------
@@ -52,7 +54,7 @@ const normalise = (s: string) =>
     .trim();
 
 function load() {
-  loading ??= fetch("/search.json")
+  loading ??= fetch(withBase("/search.json"))
     .then((r) => r.json() as Promise<Row[]>)
     .then((data) => {
       rows = data.map((r) => ({ ...r, key: normalise(r.n) }) as Row & { key: string });
@@ -99,7 +101,7 @@ function render() {
   list.innerHTML = results
     .map(
       (r, i) => `<li role="option" id="sr-${i}" aria-selected="${i === active}">
-        <a href="${r.u}" class="sr" ${r.t ? `data-type="${r.t}"` : ""}>
+        <a href="${withBase(r.u)}" class="sr" ${r.t ? `data-type="${r.t}"` : ""}>
           <span class="sr-icon">${
             r.i ? `<img src="${r.i}" alt="" width="40" height="40" loading="lazy">` : `<span class="sr-dot"></span>`
           }</span>
@@ -144,7 +146,7 @@ input.addEventListener("keydown", (e) => {
     render();
   } else if (e.key === "Enter") {
     const target = results[active];
-    if (target) location.href = target.u;
+    if (target) location.href = withBase(target.u);
   }
 });
 

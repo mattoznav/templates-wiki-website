@@ -2,6 +2,7 @@
 import { getTypes } from "../lib/data";
 import { defenses, multiplierLabel, typeName } from "../lib/format";
 import type { TypeSlug } from "../lib/types";
+import { withBase } from "../lib/paths";
 
 interface Props {
   types: TypeSlug[];
@@ -19,7 +20,7 @@ const immune = rows.filter((r) => r.multiplier === 0);
       rows.map((r) => (
         <a
           class="cell"
-          href={`/types/${r.type}/`}
+          href={withBase(`/types/${r.type}/`)}
           data-type={r.type}
           data-m={String(r.multiplier).replace(".", "_")}
           title={`${typeName(r.type)} moves deal ${r.multiplier}× damage`}

@@ -3,7 +3,7 @@ import { getAbilities, getGenerations, getIndex, getMoves, getTypes } from "../l
 import { pad } from "../lib/format";
 
 // Compact search index, fetched by the search dialog the first time it opens.
-// k: kind, n: name, u: url, d: detail line, i: image, t: type colour
+// k: kind, n: name, u: url (without the base, added by the dialog), d: detail line, i: image, t: type colour
 export const GET: APIRoute = () => {
   const rows = [
     ...getIndex().map((e) => ({
