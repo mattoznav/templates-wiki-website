@@ -94,3 +94,7 @@ src/styles/global.css    design tokens and shared styles
 Data from [PokéAPI](https://pokeapi.co/). Artwork, sprites and cries are loaded at runtime from the [PokeAPI/sprites](https://github.com/PokeAPI/sprites) and [PokeAPI/cries](https://github.com/PokeAPI/cries) repositories and are not included in this repository. Fonts: Fraunces, IBM Plex Sans and IBM Plex Mono (SIL Open Font License), installed from npm.
 
 Pokémon and Pokémon character names are trademarks of Nintendo, Creatures Inc. and GAME FREAK inc. This template is an unofficial fan reference and is not affiliated with or endorsed by them.
+
+## License
+
+The code is released under the [MIT License](LICENSE). It covers the code only: data from PokéAPI, the artwork loaded from its repositories and the Pokémon trademarks are not covered.
